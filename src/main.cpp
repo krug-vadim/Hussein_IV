@@ -71,6 +71,8 @@ void test_tree()
 
 	printRaw(dwa);
 
+	dwa = dwa.remove(3);
+
 	for(int j = 0; j<8; j++)
 	{
 		root = root.append( dwa );

@@ -67,6 +67,12 @@ class Tree
 			return Tree( value(), siblings().push_front(r) );
 		}
 
+		Tree remove(int i) const
+		{
+			assert( !isEmpty() );
+			return Tree( value(), siblings().remove(i) );
+		}
+
 		int headCount() const
 		{
 			return _root.use_count();

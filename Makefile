@@ -1,6 +1,6 @@
 PROG := Hussein
 
-CXXFLAGS := `wx-config --cxxflags --libs core,base`
+CXXFLAGS := `wx-config --cxxflags --libs core,base,adv` -std=c++11
 CXX      := g++
 
 SRC := src/ui/app.cpp

@@ -1,82 +1,87 @@
 #include "treemodel.h"
 
-#include <QtCore/QMimeData>
-#include <QtCore/QStringList>
-
-#include <QDebug>
-
-template<class T>
-TreeModel<T>::TreeModel(const Tree<T> &tree, QObject *parent)
-    : _tree(tree)
-    , QAbstractItemModel(parent)
+TreeModel::TreeModel(QObject *parent) :
+    QAbstractItemModel(parent)
 {
 }
 
-template<class T>
-TreeModel<T>::~TreeModel()
+TreeModel::~TaskModel()
 {
 }
 
-template<class T>
-QModelIndex TreeModel<T>::index(int row, int column, const QModelIndex &parent) const
+QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) const
 {
 	if ( !hasIndex(row, column, parent) )
 		return QModelIndex();
 
-	return createIndex(row, column, (void *)&tree(parent));
+	return createIndex(row, column, (void *)&getTask(parent)->subtasks().at(row));
 }
 
-template<class T>
-QModelIndex TreeModel<T>::parent(const QModelIndex &index) const
+QModelIndex TreeModel::parent(const QModelIndex &index) const
 {
 	if ( !index.isValid() )
 		return QModelIndex();
 
-	return createIndex(0, 0, tree(index) );
+	TaskWeakPointer parent = getTask(index)->parent();
+
+	if ( parent.isNull() )
+		return QModelIndex();
+
+	if ( parent == _root )
+		return QModelIndex();
+
+	TaskWeakPointer grandParent = parent.toStrongRef()->parent();
+	int parentRow = grandParent.toStrongRef()->subtasks().indexOf(parent);
+
+	if ( parentRow == - 1 )
+		return QModelIndex();
+
+	return createIndex(parentRow, 0, (void *)&grandParent.toStrongRef()->subtasks().at(parentRow));
 }
 
-template<class T>
-QVariant TreeModel<T>::data(const QModelIndex &index, int role) const
+QVariant TreeModel::data(const QModelIndex &index, int role) const
 {
+	TaskSharedPointer task;
+
 	if ( !index.isValid() )
 		return QVariant();
+
+	task = getTask(index);
 
 	switch ( role )
 	{
 		case Qt::DisplayRole:
-			return tree(index)->value();
-			/*if ( index.column() == 0 )
-				return ( task->description().isEmpty() ) ? tr("(empty)") : task->description();*/
+			if ( index.column() == 0 )
+				return ( task->description().isEmpty() ) ? tr("(empty)") : task->description();
 			break;
 
-//		case Qt::EditRole:
-//			if ( index.column() == 0 )
-//				return task->description();
-//			break;
+		case Qt::EditRole:
+			if ( index.column() == 0 )
+				return task->description();
+			break;
 
 		default:
+			return task->data(role);
 			break;
 	}
 
 	return QVariant();
 }
 
-template<class T>
-Qt::ItemFlags TreeModel<T>::flags(const QModelIndex &index) const
+Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
 	if ( !index.isValid() )
 		return 0;
 
-	return /*Qt::ItemIsEditable*/
-	       Qt::ItemIsEnabled
+	return /*Qt::ItemIsEditable
+	     | */Qt::ItemIsEnabled
 	     | Qt::ItemIsSelectable
 	     //| Qt::ItemIsDragEnabled
 	     //| Qt::ItemIsDropEnabled
 	     ;
 }
 
-template<class T>
-QVariant TreeModel<T>::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
@@ -90,24 +95,18 @@ QVariant TreeModel<T>::headerData(int section, Qt::Orientation orientation, int 
 	return QVariant();
 }
 
-template<class T>
-int TreeModel<T>::rowCount(const QModelIndex &parent) const
+int TreeModel::rowCount(const QModelIndex &parent) const
 {
-	return tree(parent)->siblings().size();
+	return getTask(parent)->subtasks().size();
 }
 
-template<class T>
-int TreeModel<T>::columnCount(const QModelIndex &parent) const
+int TreeModel::columnCount(const QModelIndex &parent) const
 {
 	Q_UNUSED(parent);
 	return 1;
 }
 
-template<class T>
-Tree<T> TreeModel<T>::tree(const QModelIndex &index) const
+TaskSharedPointer TreeModel::getTask(const QModelIndex &index) const
 {
-	if ( index.isValid() )
-		static_cast<Tree<T> *>(index.internalPointer())->siblings()[index.row()];
-	else
-		return _tree;
+	return ( index.isValid() ) ? *static_cast<TaskSharedPointer *>(index.internalPointer()) : _root;
 }

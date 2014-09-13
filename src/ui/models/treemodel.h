@@ -1,17 +1,17 @@
-#ifndef TREEMODEL_H
-#define TREEMODEL_H
+#ifndef TASKMODEL_H
+#define TASKMODEL_H
 
 #include <QtCore/QAbstractItemModel>
+#include "../../core/tree2.h"
 
-#include "../../core/tree.h"
-
-template<class T>
 class TreeModel : public QAbstractItemModel
 {
 	Q_OBJECT
 
 	public:
-		explicit TreeModel(const Tree<T> &tree, QObject *parent = 0);
+		typedef QList<int> Path;
+
+//		explicit TreeModel(Tree<int> QObject *parent = 0);
 		~TreeModel();
 
 		QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
@@ -26,10 +26,10 @@ class TreeModel : public QAbstractItemModel
 		int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
 	protected:
-		Tree<T> tree(const QModelIndex &index) const;
+		TaskSharedPointer getTask(const QModelIndex &index) const;
 
 	private:
-		Tree<T> _tree;
+		Tree<int> _root;
 };
 
-#endif // TREEMODEL_H
+#endif // TASKMODEL_H

@@ -13,8 +13,7 @@ SOURCES = \
 HEADERS = \
     src/core/tree.h \
     src/ui/mainwindow.h \
-    src/ui/models/treemodel.h \
-    src/core/tree2.h
+    src/ui/models/treemodel.h
 
 FORMS   = \
     src/ui/mainwindow.ui

@@ -89,7 +89,7 @@ class List
 				return pop_front().remove(i - 1).push_front(front());
 		}
 
-		T operator[](int i) const
+		T operator[](int i)
 		{
 			assert( !isEmpty() );
 			if (i == 0)

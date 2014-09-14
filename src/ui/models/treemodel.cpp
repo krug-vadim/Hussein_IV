@@ -1,11 +1,15 @@
 #include "treemodel.h"
 
-TreeModel::TreeModel(QObject *parent) :
-    QAbstractItemModel(parent)
+#include <QDebug>
+
+TreeModel::TreeModel(const TreeElement &root, QObject *parent)
+    : _root(root)
+    , QAbstractItemModel(parent)
 {
+	qDebug() << _root.size();
 }
 
-TreeModel::~TaskModel()
+TreeModel::~TreeModel()
 {
 }
 
@@ -14,55 +18,48 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) con
 	if ( !hasIndex(row, column, parent) )
 		return QModelIndex();
 
-	return createIndex(row, column, (void *)&getTask(parent)->subtasks().at(row));
+	return createIndex(row, column, (void *)&getTask(parent)[row]);
 }
 
 QModelIndex TreeModel::parent(const QModelIndex &index) const
 {
 	if ( !index.isValid() )
 		return QModelIndex();
-
-	TaskWeakPointer parent = getTask(index)->parent();
-
-	if ( parent.isNull() )
+	else
 		return QModelIndex();
 
-	if ( parent == _root )
+	/*const TreeElement *parent = getTask(index)->parent();
+
+	if ( !parent )
 		return QModelIndex();
 
-	TaskWeakPointer grandParent = parent.toStrongRef()->parent();
-	int parentRow = grandParent.toStrongRef()->subtasks().indexOf(parent);
-
-	if ( parentRow == - 1 )
-		return QModelIndex();
-
-	return createIndex(parentRow, 0, (void *)&grandParent.toStrongRef()->subtasks().at(parentRow));
+	return createIndex(parent->row(), 0, (void *)&parent);*/
 }
 
 QVariant TreeModel::data(const QModelIndex &index, int role) const
 {
-	TaskSharedPointer task;
+	const TreeElement *node;
 
 	if ( !index.isValid() )
 		return QVariant();
 
-	task = getTask(index);
+	node = getTask(index);
 
 	switch ( role )
 	{
 		case Qt::DisplayRole:
 			if ( index.column() == 0 )
-				return ( task->description().isEmpty() ) ? tr("(empty)") : task->description();
+				return node->value();//( task->description().isEmpty() ) ? tr("(empty)") : task->description();
 			break;
 
 		case Qt::EditRole:
 			if ( index.column() == 0 )
-				return task->description();
+				return  node->value();//task->description();
 			break;
 
-		default:
-			return task->data(role);
-			break;
+//		default:
+//			return task->data(role);
+//			break;
 	}
 
 	return QVariant();
@@ -97,7 +94,7 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
 
 int TreeModel::rowCount(const QModelIndex &parent) const
 {
-	return getTask(parent)->subtasks().size();
+	return getTask(parent)->size();
 }
 
 int TreeModel::columnCount(const QModelIndex &parent) const
@@ -106,7 +103,7 @@ int TreeModel::columnCount(const QModelIndex &parent) const
 	return 1;
 }
 
-TaskSharedPointer TreeModel::getTask(const QModelIndex &index) const
+const TreeElement *TreeModel::getTask(const QModelIndex &index) const
 {
-	return ( index.isValid() ) ? *static_cast<TaskSharedPointer *>(index.internalPointer()) : _root;
+	return ( index.isValid() ) ? static_cast<TreeElement *>(index.internalPointer()) : &_root;
 }

@@ -4,141 +4,65 @@
 #include "list.h"
 #include "list_alg.h"
 
-#include <QDebug>
+//#include <QDebug>
 
 template<class T>
 class Tree
 {
-	struct ParentInfo
+	explicit Tree(const std::shared_ptr<const Tree<T>> &t)
+	: _value(t->_value)
+	, _siblings(t->_siblings)
+	, _parent(t->_parent)
+	, _row(t->_row)
+	{}
+
+	explicit Tree(const std::shared_ptr<const T> &value) : _value(value) {}
+
+	explicit Tree(const std::shared_ptr<const T> &value, const List<const Tree<T>> &l)
+	: _value(value)
+	, _siblings(std::make_shared<const List<const Tree<T>>>(l))
 	{
-		ParentInfo() : _parent(0), _row(-1) {}
-
-		ParentInfo(const Tree *parent, int row) : _parent(parent), _row(row) {}
-
-		const Tree *_parent;
-		int _row;
-	};
-
-	struct Node
-	{
-		Node(T value) : _value(value) {}
-		Node(T value, const ParentInfo &info) : _value(value), _info(info) {}
-		Node(T value, const List< std::shared_ptr<const Node> > &siblings)
-		: _value(value)
-		, _siblings(siblings)
-		{}
-
-		Node(T value, const ParentInfo &info, const List< std::shared_ptr<const Node> > &siblings)
-		: _value(value)
-		, _info(info)
-		, _siblings(siblings)
-		{}
-
-		Node(std::shared_ptr<const Node> &prev)
-		: _value(prev->_value)
-		, _info(prev->_info)
-		, _siblings(prev->_siblings)
-		{}
-
-		T _value;
-		ParentInfo _info;
-
-		std::shared_ptr<const Node> _prev;
-		List< std::shared_ptr<const Node> > _siblings;
-	};
-
-	explicit Tree(std::shared_ptr<const Node> const &node) : _root(node) {}
-	explicit Tree(T value, const ParentInfo &info) : _root(std::make_shared<Node>(value, info)) {}
-	explicit Tree(T value, const List< const Tree > &siblings, const ParentInfo &info)
-	{
-		List< std::shared_ptr<const Node> > nodes;
-
-		nodes = fmap<std::shared_ptr<const Node>>([](const Tree &t) { return t._root; }, siblings);
-
-		_root = std::make_shared<const Node>(value, info, nodes);
 	}
 
 	public:
-		Tree() {}
-		Tree(T value) : _root(std::make_shared<Node>(value)) {}
-		~Tree() { qDebug() << "destoing value" << value(); }
+		Tree() : _parent(0), _row(-1) {}
+		Tree(T value) : _value(std::make_shared<const T>(value)), _parent(0), _row(-1) {}
+		~Tree() { if (_value) std::cout << "destroyed" << value() << std::endl; }
 
-		Tree(T value, const List< const Tree > &siblings)
+		T value() const
 		{
-			List< std::shared_ptr<const Node> > nodes;
-
-			nodes = fmap<std::shared_ptr<const Node>>([](const Tree &t) { return t._root; }, siblings);
-
-			_root = std::make_shared<const Node>(value, nodes);
+			return *_value;
 		}
 
 		bool isEmpty() const
 		{
-			return !_root;
+			return !_value;
 		}
 
-		T value() const
+		const Tree<T> operator [](int i) const
 		{
 			assert( !isEmpty() );
-			return _root->_value;
+			return Tree(_siblings[i]);
 		}
 
-		const Tree *parent() const
+		const Tree<T> append(const T &value) const
 		{
-			assert( !isEmpty() );
-			return _root->_info._parent;
+			return append(Tree<T>(value));
 		}
 
-		int row() const
+		const Tree<T> append(const Tree<T> &t) const
 		{
-			assert( !isEmpty() );
-			return _root->_info._row;
-		}
-
-		Tree operator[](int i) const
-		{
-			assert( !isEmpty() );
-			return Tree(_root->_siblings[i]);
-		}
-
-		Tree append(T &data) const
-		{
-			return append(Tree(data));
-		}
-
-		Tree append(const Tree &r) const
-		{
-			assert( !isEmpty() );
-			return Tree( Node(value(), ParentInfo(this, size()), _root->_siblings.push_front(r._root)) );
-		}
-
-//		Tree remove(int i) const
-//		{
-//			assert( !isEmpty() );
-//			return Tree( value(), siblings().remove(i) );
-//		}
-
-		int size() const
-		{
-			auto l = _root->_siblings;
-			int size = 0;
-
-			while ( !l.isEmpty() )
-			{
-				size++;
-				l = l.pop_front();
-			}
-
-			return size;
-		}
-
-		int headCount() const
-		{
-			return _root.use_count();
+			if ( _siblings )
+				return Tree( _value , _siblings->push_front(t) );
+			else
+				return Tree( _value, List<const Tree<T>>(t));
 		}
 
 	private:
-		std::shared_ptr<const Node> _root;
+		std::shared_ptr<const T> _value;
+		std::shared_ptr<const List<const Tree<T>>> _siblings;
+		const Tree<T> *_parent;
+		int _row;
 };
 
 #endif

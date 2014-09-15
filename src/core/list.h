@@ -14,7 +14,7 @@ class List
 {
 	struct Item
 	{
-		Item(T value, std::shared_ptr<const Item> const &tail) : _value(value), _next(tail) {}
+		Item(T &value, std::shared_ptr<const Item> const &tail) : _value(value), _next(tail) {}
 
 		explicit Item(T value) : _value(value) {}
 
@@ -26,8 +26,8 @@ class List
 
 	public:
 		List() {}
-		List(T v, List const &tail) : _head(std::make_shared<Item>(v, tail._head)) {}
-		explicit List(T v) : _head(std::make_shared<Item>(v)) {}
+		List(T &v, List const &tail) : _head(std::make_shared<Item>(v, tail._head)) {}
+		explicit List(T &v) : _head(std::make_shared<Item>(v)) {}
 
 		// From initializer list
 		List(std::initializer_list<T> init)

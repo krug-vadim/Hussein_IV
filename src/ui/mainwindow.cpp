@@ -15,10 +15,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	t = t.append(1);
 	t = t.append(2);
-	/*t = t.append(3);
-	t = t.append(4);*/
+	t = t.append(3);
+	t = t.append(4);
 
-	//ui->treeView->setModel(new TreeModel(t));
+	ui->treeView->setModel(new TreeModel(t));
 }
 
 MainWindow::~MainWindow()

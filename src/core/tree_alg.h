@@ -12,10 +12,17 @@ void printRaw(const Tree<T> &tree, const int level = 0)
 	{
 		for(int i=0;i<level;i++)
 			std::cout << " ";
-		std::cout  << "(" << tree.value() << ", " << tree.headCount() - 1 << ") " << std::endl;
+		std::cout << "("
+		          << tree.value()
+		          << ", "
+		          << tree.row()
+		          << ", "
+		          << tree.size()
+		          << ") "
+		          << std::endl;
 
-		for(List<const Tree<T>> lst = tree.siblings(); !lst.isEmpty();lst = lst.pop_front())
-			printRaw(lst.front(), level + 1);
+		for(int i = 0; i < tree.size(); i++)
+			printRaw(tree[i], level + 1);
 
 	}
 }

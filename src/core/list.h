@@ -98,6 +98,11 @@ class List
 				return pop_front()[i-1];
 		}
 
+		int size() const
+		{
+			return ( isEmpty() ) ? 0 : 1 + pop_front().size();
+		}
+
 		int headCount() const
 		{
 			return _head.use_count();

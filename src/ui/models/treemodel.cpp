@@ -18,6 +18,8 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) con
 	if ( !hasIndex(row, column, parent) )
 		return QModelIndex();
 
+	qDebug() << "index" << row << column;
+
 	return createIndex(row, column, (void *)&getTask(parent)[row]);
 }
 
@@ -25,15 +27,15 @@ QModelIndex TreeModel::parent(const QModelIndex &index) const
 {
 	if ( !index.isValid() )
 		return QModelIndex();
-	else
-		return QModelIndex();
 
-	/*const TreeElement *parent = getTask(index)->parent();
+	qDebug() << "parent" << index.row() << index.column();
+
+	const TreeElement *parent = getTask(index)->parent();
 
 	if ( !parent )
 		return QModelIndex();
 
-	return createIndex(parent->row(), 0, (void *)&parent);*/
+	return createIndex(parent->row(), 0, (void *)&parent);
 }
 
 QVariant TreeModel::data(const QModelIndex &index, int role) const

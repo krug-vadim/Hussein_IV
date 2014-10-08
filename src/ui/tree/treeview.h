@@ -3,11 +3,19 @@
 
 #include <QtWidgets/QAbstractScrollArea>
 
+#include "../../core/tree.h"
+
 class TreeModel;
 
 class TreeView : public QAbstractScrollArea
 {
 	Q_OBJECT
+
+	struct NodeInfo
+	{
+		int height;
+		QObject *obj;
+	};
 
 	public:
 		explicit TreeView(QWidget *parent = 0);
@@ -24,6 +32,8 @@ class TreeView : public QAbstractScrollArea
 
 	private:
 		TreeModel *_model;
+
+		Tree<NodeInfo> *_rootInfo;
 };
 
 #endif // TREEVIEW_H

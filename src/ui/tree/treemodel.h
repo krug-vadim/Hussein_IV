@@ -10,6 +10,7 @@ class TreeModel : public QObject
 	public:
 		explicit TreeModel(QObject *parent = 0);
 
+		virtual QObject *root(const QObject *obj) =0;
 		virtual QObject *parent(const QObject *obj) =0;
 
 		virtual QObject *nextSibling(const QObject *obj) =0;

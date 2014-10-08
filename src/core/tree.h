@@ -4,11 +4,15 @@
 #include "list.h"
 #include "list_alg.h"
 
+class QAbstractItemModel;
+
 //#include <QDebug>
 
 template<class T>
 class Tree
 {
+	friend class QAbstractItemModel;
+
 	/*explicit Tree(const Tree<T> &t)
 	: _value(t._value)
 	, _siblings(t._siblings)

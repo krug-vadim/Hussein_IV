@@ -27,7 +27,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QTreeView" name="treeView"/>
+     <widget class="TreeView" name="widget" native="true"/>
     </item>
    </layout>
   </widget>
@@ -43,6 +43,14 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TreeView</class>
+   <extends>QWidget</extends>
+   <header>src/ui/tree/treeview.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

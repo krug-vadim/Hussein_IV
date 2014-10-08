@@ -1,21 +1,24 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <QtWidgets/QMainWindow>
 
-namespace Ui {
+namespace Ui
+{
 	class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
-		Q_OBJECT
+	Q_OBJECT
 
 	public:
 		explicit MainWindow(QWidget *parent = 0);
 		~MainWindow();
 
 	private:
+		std::list<int> some_list;
+
 		Ui::MainWindow *ui;
 };
 

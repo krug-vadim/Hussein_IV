@@ -4,3 +4,8 @@ TreeModel::TreeModel(QObject *parent) :
     QObject(parent)
 {
 }
+
+TreeModel::~TreeModel()
+{
+
+}

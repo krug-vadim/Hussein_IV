@@ -3,6 +3,8 @@
 
 #include <QDebug>
 
+#include "testtreemodel.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -10,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 
 	qDebug() << sizeof(QObject);
+
+	ui->widget->setModel(new TestTreeModel(0, this));
 	//ui->treeView->setUniformRowHeights(true);
 	//ui->treeView->setModel(new TreeModel(t));
 

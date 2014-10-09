@@ -24,9 +24,12 @@ class TreeView : public QAbstractScrollArea
 		void setModel(TreeModel *model);
 
 	protected:
-		void drawCell(int col, const QObject *obj);
-		void drawRow(const QObject *obj);
-		void drawTree();
+		void drawCell(int row, int col, const QObject *obj, QPainter &painter);
+		void drawRow(int row, const QObject *obj, QPainter &painter);
+
+		int drawNode(int row, const QObject *obj);
+
+		void drawTree(QPainter &painter);
 
 		void paintEvent(QPaintEvent * event);
 

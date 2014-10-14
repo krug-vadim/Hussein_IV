@@ -13,8 +13,9 @@ class TreeView : public QAbstractScrollArea
 
 	struct NodeInfo
 	{
-		int height;
 		QObject *obj;
+		QSize   size;
+		int     row;
 	};
 
 	public:
@@ -24,16 +25,29 @@ class TreeView : public QAbstractScrollArea
 		void setModel(TreeModel *model);
 
 	protected:
-		void drawCell(int row, int col, const QObject *obj, QPainter &painter);
-		void drawRow(int row, const QObject *obj, QPainter &painter);
+		QSize cellSizeHint(int row, int col, const QObject *obj) const;
+
+		void drawCell(int row, int col, const QObject *obj, const QRect &cell, QPainter &painter);
+		void drawRow(int row, const QObject *obj,  const QRect &rect, QPainter &painter);
 
 		int drawNode(int row, const QObject *obj);
 
 		void drawTree(QPainter &painter);
 
 		void paintEvent(QPaintEvent * event);
+		void scrollContentsBy(int dx, int dy);
 
 	private:
+		int findTopNode(int dy);
+		void makePaintList(const QSize &viewport);
+
+		QObject *previousNode(QObject *obj) const;
+		QObject *nextNode(QObject *obj) const;
+
+		QList<NodeInfo> _paintList;
+		NodeInfo _topNode;
+		int _offsetY;
+
 		TreeModel *_model;
 
 		Tree<NodeInfo> *_rootInfo;

@@ -4,7 +4,7 @@ QT += qml quick
 TARGET   = Hussein
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -std=c++14
+#QMAKE_CXXFLAGS += -std=c++14
 
 SOURCES = \
     src/main.cpp \

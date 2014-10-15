@@ -20,7 +20,7 @@ QObject *TestTreeModel::root()
 
 QObject *TestTreeModel::parent(const QObject *obj)
 {
-	return _root;
+	return (obj == _root) ? 0 : _root;
 }
 
 QObject *TestTreeModel::nextSibling(const QObject *obj)
@@ -59,7 +59,7 @@ QObject *TestTreeModel::lastChild(const QObject *obj)
 
 quint64 TestTreeModel::childCount(const QObject *obj)
 {
-	return 100;
+	return (1000*1000);
 }
 
 quint64 TestTreeModel::columnCount(const QObject *obj)

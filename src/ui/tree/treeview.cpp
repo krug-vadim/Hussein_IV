@@ -12,8 +12,6 @@ TreeView::TreeView(QWidget *parent) :
     QAbstractScrollArea (parent)
 {
 	verticalScrollBar()->setMaximum(100*32);
-
-
 }
 
 TreeModel *TreeView::model() const
@@ -29,6 +27,7 @@ void TreeView::setModel(TreeModel *model)
 	_topNode.obj = model->root();
 	_topNode.row = 0;
 	_topNode.size = cellSizeHint(0,-1,_topNode.obj);
+	verticalScrollBar()->setMaximum( cellSizeHint(-1,-1,model->root()).height() * model->childCount(model->root()) );
 }
 
 QSize TreeView::cellSizeHint(int row, int col, const QObject *obj) const
@@ -97,8 +96,6 @@ int TreeView::findTopNode(int offset)
 {
 	QObject *t;
 	QSize size;
-
-	qDebug() << "offset" << offset;
 
 	if ( offset == 0)
 		return 0;

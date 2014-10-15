@@ -49,12 +49,12 @@ QObject *TestTreeModel::previousSibling(const QObject *obj)
 
 QObject *TestTreeModel::firstChild(const QObject *obj)
 {
-	return ( getNum(obj) == -1 ) ? _nodes.first() : 0;
+	return ( obj == _root ) ? _nodes.first() : 0;
 }
 
 QObject *TestTreeModel::lastChild(const QObject *obj)
 {
-	return ( getNum(obj) == -1 ) ? _nodes.last() : 0;
+	return ( obj == _root ) ? _nodes.last() : 0;
 }
 
 quint64 TestTreeModel::childCount(const QObject *obj)
@@ -74,8 +74,15 @@ quint64 TestTreeModel::flags(const QObject *obj)
 
 int TestTreeModel::getNum(const QObject *obj)
 {
-	if ( obj->objectName() == QString("(root)") )
+	bool ok;
+
+	if ( !obj )
 		return -1;
+
+	int n = obj->objectName().toInt(&ok, 10);
+
+	if ( ok )
+		return n;
 	else
-		return obj->objectName().toInt();
+		return -1;
 }

@@ -80,7 +80,6 @@ void TreeView::paintEvent(QPaintEvent *event)
 
 	QPainter painter(viewport());
 	drawTree(painter);
-	//viewport()->update();
 }
 
 void TreeView::scrollContentsBy(int dx, int dy)
@@ -97,64 +96,41 @@ int TreeView::findTopNode(int offset)
 	QObject *t;
 	QSize size;
 
-	if ( offset == 0)
-		return 0;
-	else if ( offset < 0 ) // scrolling down
+	qDebug() << "offset" << offset;
+
+	if ( offset < 0 )
 	{
-		if ( abs(offset) > _topNode.size.height() )
+		// scrolling down
+		while ( abs(offset) > _topNode.size.height() )
 		{
 			offset += _topNode.size.height();
 
 			t = nextNode(_topNode.obj);
 
-			if ( t )
-			{
-				_topNode.obj = t;
-				_topNode.row++;
-			}
-			else
-			{
-				_topNode.obj = model()->root();
-				_topNode.row = 0;
-			}
+			if ( !t )
+				return offset;
 
+			_topNode.obj = t;
+			_topNode.row++;
+			_topNode.size = cellSizeHint(_topNode.row, -1, t);
+		}
+	}
+	else
+	{
+		// scrolling up
+		while ( offset > 0 )
+		{
+			t = previousNode(_topNode.obj);
+
+			if ( !t )
+				return offset;
+
+			_topNode.obj = t;
+			_topNode.row--;
 			_topNode.size = cellSizeHint(_topNode.row, -1, t);
 
-			return findTopNode(offset);
+			offset -= _topNode.size.height();
 		}
-		else
-			return offset;
-	}
-	else // scrolling up
-	{
-		t = previousNode(_topNode.obj);
-
-		if ( t )
-			size = cellSizeHint(_topNode.row-1, -1, t);
-		else
-			size = cellSizeHint(-1, -1, model()->root());
-
-		if ( abs(offset) > size.height() )
-		{
-			offset -= size.height();
-			_topNode.size = size;
-
-			if ( t )
-			{
-				_topNode.obj = t;
-				_topNode.row--;
-
-				return findTopNode(offset);
-			}
-			else
-			{
-				_topNode.obj = model()->root();
-				_topNode.row = 0;
-				return 0;
-			}
-		}
-		else
-			return offset;
 	}
 
 	return offset;

@@ -5,6 +5,19 @@
 
 #include "tree/treemodel.h"
 
+class TestObject : public QObject
+{
+	Q_OBJECT
+
+	public:
+		TestObject(QObject *parent = 0) : QObject(parent)
+		{
+			flags = TreeModel::ItemIsSelectable;
+		}
+
+		TreeModel::Flags flags;
+};
+
 class TestTreeModel : public TreeModel
 {
 	Q_OBJECT
@@ -24,13 +37,14 @@ class TestTreeModel : public TreeModel
 		virtual quint64 childCount(const QObject *obj);
 		virtual quint64 columnCount(const QObject *obj);
 
-		virtual quint64 flags(const QObject *obj);
+		virtual Flags flags(const QObject *obj);
+		virtual void setFlags(Flags flags, QObject *obj);
 
 	private:
 		int getNum(const QObject *obj);
 
-		QObject *_root;
-		QVector<QObject *> _nodes;
+		TestObject *_root;
+		QVector<TestObject *> _nodes;
 
 };
 

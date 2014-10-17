@@ -4,12 +4,12 @@ TestTreeModel::TestTreeModel(QObject *root, QObject *parent) :
     TreeModel(parent),
     _nodes( 1000 * 1000 )
 {
-	_root = new QObject(parent);
+	_root = new TestObject(parent);
 	_root->setObjectName(QString("(root)"));
 
 	for(int i = 0; i < _nodes.size(); i++)
 	{
-		_nodes[i] = new QObject(_root);
+		_nodes[i] = new TestObject(_root);
 		_nodes.at(i)->setObjectName(QString("%1").arg(i));
 	}
 }
@@ -68,9 +68,22 @@ quint64 TestTreeModel::columnCount(const QObject *obj)
 	return 3;
 }
 
-quint64 TestTreeModel::flags(const QObject *obj)
+TreeModel::Flags TestTreeModel::flags(const QObject *obj)
 {
-	return 0;
+	const TestObject *t = qobject_cast<const TestObject *>(obj);
+
+	if ( t )
+		return t->flags;
+	else
+		return TreeModel::NoItemFlags;
+}
+
+void TestTreeModel::setFlags(TreeModel::Flags flags, QObject *obj)
+{
+	TestObject *t = qobject_cast<TestObject *>(obj);
+
+	if ( t )
+		t->flags = flags;
 }
 
 int TestTreeModel::getNum(const QObject *obj)

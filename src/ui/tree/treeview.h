@@ -34,12 +34,17 @@ class TreeView : public QAbstractScrollArea
 
 		void drawTree(QPainter &painter);
 
-		void paintEvent(QPaintEvent * event);
+		void mousePressEvent(QMouseEvent *event);
+		void paintEvent(QPaintEvent *event);
+		void resizeEvent(QResizeEvent *event);
+
 		void scrollContentsBy(int dx, int dy);
 
 	private:
 		int findTopNode(int dy);
 		void makePaintList(const QSize &viewport);
+		void calculateTotalHeight(void);
+		void selectRow(const QPoint &pos, const bool append);
 
 		QObject *previousNode(QObject *obj) const;
 		QObject *nextNode(QObject *obj) const;
@@ -48,9 +53,10 @@ class TreeView : public QAbstractScrollArea
 		NodeInfo _topNode;
 		int _offsetY;
 
-		TreeModel *_model;
+		int _totalHeight;
 
-		Tree<NodeInfo> *_rootInfo;
+		QList<const QObject *> _selectedItems;
+		TreeModel *_model;
 };
 
 #endif // TREEVIEW_H

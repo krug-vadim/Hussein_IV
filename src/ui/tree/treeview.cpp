@@ -1,6 +1,9 @@
 #include "treeview.h"
 
+#include <QtGui/QGuiApplication>
+
 #include <QtGui/QPainter>
+#include <QtGui/QResizeEvent>
 
 #include <QtWidgets/QScrollBar>
 
@@ -11,7 +14,6 @@
 TreeView::TreeView(QWidget *parent) :
     QAbstractScrollArea (parent)
 {
-	verticalScrollBar()->setMaximum(100*32);
 }
 
 TreeModel *TreeView::model() const
@@ -23,16 +25,21 @@ void TreeView::setModel(TreeModel *model)
 {
 	_model = model;
 
+	_selectedItems.clear();
+
 	_offsetY = 0;
 	_topNode.obj = model->root();
 	_topNode.row = 0;
 	_topNode.size = cellSizeHint(0,-1,_topNode.obj);
-	verticalScrollBar()->setMaximum( cellSizeHint(-1,-1,model->root()).height() * model->childCount(model->root()) );
+
+	calculateTotalHeight();
+
+	verticalScrollBar()->setMaximum( _totalHeight );
 }
 
 QSize TreeView::cellSizeHint(int row, int col, const QObject *obj) const
 {
-	return QSize(64, 32);
+	return QSize(128, 16);
 }
 
 void TreeView::drawCell(int row, int col, const QObject *obj, const QRect &cell, QPainter &painter)
@@ -49,6 +56,15 @@ void TreeView::drawRow(int row, const QObject *obj, const QRect &rect, QPainter 
 	QRect cell(rect);
 
 	//drawGap();
+
+	if ( row % 2 )
+		painter.setBrush( QGuiApplication::palette().brush(QPalette::Midlight) );
+	else
+		painter.setBrush( QGuiApplication::palette().brush(QPalette::Base)  );
+
+	if ( _selectedItems.contains(obj) )
+		painter.setBrush( QGuiApplication::palette().brush(QPalette::Highlight)  );
+
 	for(int i = 0; i < model()->columnCount(obj); i++)
 	{
 		drawCell(row, i, obj, cell, painter);
@@ -71,6 +87,16 @@ void TreeView::drawTree(QPainter &painter)
 	}
 }
 
+void TreeView::mousePressEvent(QMouseEvent *event)
+{
+	QAbstractScrollArea::mousePressEvent(event);
+
+	if ( event->button() != Qt::LeftButton )
+		return;
+
+	selectRow(event->pos(), event->modifiers() & Qt::ControlModifier );
+}
+
 void TreeView::paintEvent(QPaintEvent *event)
 {
 	qDebug() << "paint event" << verticalScrollBar()->value();
@@ -80,6 +106,12 @@ void TreeView::paintEvent(QPaintEvent *event)
 
 	QPainter painter(viewport());
 	drawTree(painter);
+}
+
+void TreeView::resizeEvent(QResizeEvent *event)
+{
+	QAbstractScrollArea::resizeEvent(event);
+	makePaintList(event->size());
 }
 
 void TreeView::scrollContentsBy(int dx, int dy)
@@ -158,6 +190,44 @@ void TreeView::makePaintList(const QSize &viewport)
 		remainHeight -= _paintList.last().size.height();
 
 		obj = nextNode(obj);
+	}
+}
+
+void TreeView::calculateTotalHeight()
+{
+	QObject *t;
+
+	t = model()->root();
+	_totalHeight = 0;
+
+	while ( (t = nextNode(t)) )
+		_totalHeight += cellSizeHint(-1, -1, t).height();
+}
+
+void TreeView::selectRow(const QPoint &pos, const bool append)
+{
+	int height = pos.y();
+
+	foreach(const NodeInfo &node, _paintList)
+	{
+		if ( height < node.size.height() )
+		{
+			TreeModel::Flags flags;
+
+			flags = model()->flags(node.obj);
+
+			if ( flags & TreeModel::ItemIsSelectable )
+			{
+				if ( !append )
+					_selectedItems.clear();
+
+				_selectedItems.append(node.obj);
+				viewport()->update();
+			}
+			return;
+		}
+
+		height -= node.size.height();
 	}
 }
 

@@ -1,15 +1,16 @@
 #include "testtreemodel.h"
 
 TestTreeModel::TestTreeModel(QObject *root, QObject *parent) :
-    TreeModel(parent)
+    TreeModel(parent),
+    _nodes( 1000 * 1000 )
 {
 	_root = new QObject(parent);
 	_root->setObjectName(QString("(root)"));
 
-	for(int i = 0; i < childCount(0); i++)
+	for(int i = 0; i < _nodes.size(); i++)
 	{
-		_nodes.append(new QObject(_root));
-		_nodes.last()->setObjectName(QString("%1").arg(i));
+		_nodes[i] = new QObject(_root);
+		_nodes.at(i)->setObjectName(QString("%1").arg(i));
 	}
 }
 
@@ -39,8 +40,8 @@ QObject *TestTreeModel::previousSibling(const QObject *obj)
 {
 	int n = getNum(obj);
 
-	if ( n == -1 )
-		return 0;
+	if ( n == 1 )
+		return _nodes.at(0);
 	else if ( n > 1 )
 		return _nodes.at(n - 1);
 	else
@@ -59,7 +60,7 @@ QObject *TestTreeModel::lastChild(const QObject *obj)
 
 quint64 TestTreeModel::childCount(const QObject *obj)
 {
-	return (1000*1000);
+	return _nodes.size();
 }
 
 quint64 TestTreeModel::columnCount(const QObject *obj)

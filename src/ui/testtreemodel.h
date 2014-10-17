@@ -1,6 +1,8 @@
 #ifndef TESTTREEMODEL_H
 #define TESTTREEMODEL_H
 
+#include <QtCore/QVector>
+
 #include "tree/treemodel.h"
 
 class TestTreeModel : public TreeModel
@@ -28,7 +30,7 @@ class TestTreeModel : public TreeModel
 		int getNum(const QObject *obj);
 
 		QObject *_root;
-		QObjectList _nodes;
+		QVector<QObject *> _nodes;
 
 };
 

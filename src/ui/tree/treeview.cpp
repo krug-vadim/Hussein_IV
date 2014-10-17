@@ -96,9 +96,24 @@ int TreeView::findTopNode(int offset)
 	QObject *t;
 	QSize size;
 
-	qDebug() << "offset" << offset;
+	if ( offset > 0 )
+	{
+		// scrolling up
+		while ( offset > 0 )
+		{
+			t = previousNode(_topNode.obj);
 
-	if ( offset < 0 )
+			if ( !t )
+				return 0;
+
+			_topNode.obj = t;
+			_topNode.row--;
+			_topNode.size = cellSizeHint(_topNode.row, -1, t);
+
+			offset -= _topNode.size.height();
+		}
+	}
+	else
 	{
 		// scrolling down
 		while ( abs(offset) > _topNode.size.height() )
@@ -113,23 +128,6 @@ int TreeView::findTopNode(int offset)
 			_topNode.obj = t;
 			_topNode.row++;
 			_topNode.size = cellSizeHint(_topNode.row, -1, t);
-		}
-	}
-	else
-	{
-		// scrolling up
-		while ( offset > 0 )
-		{
-			t = previousNode(_topNode.obj);
-
-			if ( !t )
-				return offset;
-
-			_topNode.obj = t;
-			_topNode.row--;
-			_topNode.size = cellSizeHint(_topNode.row, -1, t);
-
-			offset -= _topNode.size.height();
 		}
 	}
 
@@ -167,38 +165,28 @@ QObject *TreeView::previousNode(QObject *obj) const
 {
 	QObject *t;
 
-	while ( obj )
+	t = model()->previousSibling(obj);
+	if ( t )
 	{
-		t = model()->previousSibling(obj);
-		if ( t )
-		{
-			obj = t;
-			t = model()->lastChild(obj);
-			return t ? t : obj;
-		}
-
-		obj = model()->parent(obj);
+		obj = t;
+		t = model()->lastChild(t);
+		return t ? t : obj;
 	}
-
-	return obj;
+	else
+		return model()->parent(obj);
 }
 
 QObject *TreeView::nextNode(QObject *obj) const
 {
 	QObject *t;
 
-	while ( obj )
-	{
-		t = model()->firstChild(obj);
-		if ( t )
-			return t;
+	t = model()->firstChild(obj);
+	if ( t )
+		return t;
 
-		t = model()->nextSibling(obj);
-		if ( t )
-			return t;
+	t = model()->nextSibling(obj);
+	if ( t )
+		return t;
 
-		obj = model()->parent(obj);
-	}
-
-	return obj;
+	return model()->nextSibling(model()->parent(obj));
 }

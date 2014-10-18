@@ -2,7 +2,7 @@
 
 TestTreeModel::TestTreeModel(QObject *root, QObject *parent) :
     TreeModel(parent),
-    _nodes( 1000 * 1000 )
+    _nodes( 1000 )
 {
 	_root = new TestObject(parent);
 	_root->setObjectName(QString("(root)"));

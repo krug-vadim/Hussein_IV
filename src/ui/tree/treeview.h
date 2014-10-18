@@ -15,7 +15,8 @@ class TreeView : public QAbstractScrollArea
 	{
 		QObject *obj;
 		QSize   size;
-		int     row;
+		int    row;
+		int    level;
 	};
 
 	public:
@@ -34,7 +35,10 @@ class TreeView : public QAbstractScrollArea
 
 		void drawTree(QPainter &painter);
 
+		void keyPressEvent(QKeyEvent *event);
+		void mouseMoveEvent(QMouseEvent *event);
 		void mousePressEvent(QMouseEvent *event);
+
 		void paintEvent(QPaintEvent *event);
 		void resizeEvent(QResizeEvent *event);
 
@@ -46,8 +50,10 @@ class TreeView : public QAbstractScrollArea
 		void calculateTotalHeight(void);
 		void selectRow(const QPoint &pos, const bool append);
 
-		QObject *previousNode(QObject *obj) const;
-		QObject *nextNode(QObject *obj) const;
+		const QObject *objAtPos(const QPoint &pos) const;
+
+		QObject *previousNode(QObject *obj, int &level) const;
+		QObject *nextNode(QObject *obj, int &level) const;
 
 		QList<NodeInfo> _paintList;
 		NodeInfo _topNode;
@@ -55,6 +61,7 @@ class TreeView : public QAbstractScrollArea
 
 		int _totalHeight;
 
+		const QObject *_highlightedItem;
 		QList<const QObject *> _selectedItems;
 		TreeModel *_model;
 };

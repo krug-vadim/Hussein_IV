@@ -150,6 +150,8 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 
 void TreeView::mouseMoveEvent(QMouseEvent *event)
 {
+	QAbstractScrollArea::mouseMoveEvent(event);
+
 	if ( !hasMouseTracking() )
 		return;
 
@@ -160,6 +162,8 @@ void TreeView::mouseMoveEvent(QMouseEvent *event)
 
 void TreeView::mousePressEvent(QMouseEvent *event)
 {
+	QAbstractScrollArea::mousePressEvent(event);
+
 	if ( event->button() != Qt::LeftButton )
 		return;
 
@@ -169,6 +173,8 @@ void TreeView::mousePressEvent(QMouseEvent *event)
 
 void TreeView::paintEvent(QPaintEvent *event)
 {
+	QAbstractScrollArea::paintEvent(event);
+
 	QPainter painter(viewport());
 	drawTree(painter);
 	event->accept();
@@ -176,6 +182,8 @@ void TreeView::paintEvent(QPaintEvent *event)
 
 void TreeView::resizeEvent(QResizeEvent *event)
 {
+	QAbstractScrollArea::resizeEvent(event);
+
 	makePaintList(event->size());
 	event->accept();
 }

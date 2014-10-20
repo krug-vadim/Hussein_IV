@@ -7,6 +7,8 @@
 #include <QtGui/QResizeEvent>
 
 #include <QtWidgets/QScrollBar>
+#include <QtWidgets/QStyle>
+#include <QtWidgets/QStyleOptionFocusRect>
 
 #include "treemodel.h"
 
@@ -15,6 +17,7 @@
 TreeView::TreeView(QWidget *parent) :
     QAbstractScrollArea (parent)
 {
+	setMouseTracking(true);
 }
 
 TreeModel *TreeView::model() const
@@ -42,44 +45,63 @@ void TreeView::setModel(TreeModel *model)
 
 QSize TreeView::cellSizeHint(int row, int col, const QObject *obj) const
 {
-	return QSize(128, 16);
+	return QSize(128, 64);
 }
 
-void TreeView::drawCell(int row, int col, const QObject *obj, const QRect &cell, QPainter &painter)
+void TreeView::drawCell(int row, int col, const QObject *obj, const QRect &cell, QStyleOptionViewItem &opt, QPainter &painter)
 {
 	//do it
-	painter.drawRect( cell );
-	painter.drawText(cell.x()+4,
-	                 cell.y()+16,
+	//painter.drawRect( cell );
+	painter.drawText(cell,
 	                 QString("(%1,%2)").arg(row).arg(col));
 }
 
-void TreeView::drawRow(int row, const QObject *obj, const QRect &rect, QPainter &painter)
+void TreeView::drawRow(int row, const QObject *obj, const QRect &rect, QStyleOptionViewItem &opt, QPainter &painter)
 {
 	QRect cell(rect);
 
 	//drawGap();
 
-	if ( _selectedItems.contains(obj) )
-		painter.setBrush( QGuiApplication::palette().brush(QPalette::Highlight) );
-	else if ( obj == _highlightedItem )
-		painter.setBrush( QGuiApplication::palette().brush(QPalette::ToolTipBase) );
-	else if ( row % 2 )
-		painter.setBrush( QGuiApplication::palette().brush(QPalette::AlternateBase) );
+	if ( obj == _highlightedItem )
+		opt.state |= QStyle::State_MouseOver;
 	else
-		painter.setBrush( QGuiApplication::palette().brush(QPalette::Base) );
-
+		opt.state &= ~QStyle::State_MouseOver;
+	opt.state |= QStyle::State_HasFocus;
+	if ( row % 2 )
+	{
+		opt.features |= QStyleOptionViewItem::Alternate;
+		style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, &painter, this);
+	}
+	else
+	{
+		opt.features &= ~QStyleOptionViewItem::Alternate;
+		style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, &painter, this);
+	}
 
 	for(uint i = 0; i < model()->columnCount(obj); i++)
 	{
-		drawCell(row, i, obj, cell, painter);
+		drawCell(row, i, obj, cell, opt, painter);
 		cell.moveLeft( cell.x() + cell.width() );
+	}
+
+	style()->drawPrimitive(QStyle::PE_IndicatorBranch, &opt, &painter, this);
+
+	if ( _selectedItems.contains(obj)  )
+	{
+		QStyleOptionFocusRect o;
+		o.QStyleOption::operator=(opt);
+		o.state |= QStyle::State_KeyboardFocusChange;
+		QPalette::ColorGroup cg = QPalette::Normal;
+		o.backgroundColor = QGuiApplication::palette().color(cg, QPalette::Highlight);
+		o.rect = opt.rect;
+		style()->drawPrimitive(QStyle::PE_FrameFocusRect, &o, &painter, this);
 	}
 }
 
 void TreeView::drawTree(QPainter &painter)
 {
 	QRect rect;
+	QStyleOptionViewItem opt;
 
 	rect.setY(_offsetY);
 
@@ -87,7 +109,11 @@ void TreeView::drawTree(QPainter &painter)
 	{
 		rect.setX( node.level * 32 );
 		rect.setSize(node.size);
-		drawRow(node.row, node.obj, rect, painter);
+
+		opt.rect.setRect(0, rect.y(), viewport()->width(), rect.height());
+
+		drawRow(node.row, node.obj, rect, opt, painter);
+
 		rect.moveTop( rect.y() + rect.height() );
 	}
 }

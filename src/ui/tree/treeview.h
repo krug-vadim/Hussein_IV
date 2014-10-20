@@ -2,6 +2,8 @@
 #define TREEVIEW_H
 
 #include <QtWidgets/QAbstractScrollArea>
+#include <QtWidgets/QStyle>
+#include <QtWidgets/QStyleOptionViewItem>
 
 #include "../../core/tree.h"
 
@@ -28,8 +30,8 @@ class TreeView : public QAbstractScrollArea
 	protected:
 		QSize cellSizeHint(int row, int col, const QObject *obj) const;
 
-		void drawCell(int row, int col, const QObject *obj, const QRect &cell, QPainter &painter);
-		void drawRow(int row, const QObject *obj,  const QRect &rect, QPainter &painter);
+		void drawCell(int row, int col, const QObject *obj, const QRect &cell, QStyleOptionViewItem &opt, QPainter &painter);
+		void drawRow(int row, const QObject *obj,  const QRect &rect, QStyleOptionViewItem &opt, QPainter &painter);
 
 		int drawNode(int row, const QObject *obj);
 

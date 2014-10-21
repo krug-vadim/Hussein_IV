@@ -12,7 +12,9 @@ class TestObject : public QObject
 	public:
 		TestObject(QObject *parent = 0) : QObject(parent)
 		{
-			flags = TreeModel::ItemIsSelectable;
+			flags = TreeModel::ItemIsSelectable
+			      | TreeModel::ItemIsEditable
+			      ;
 		}
 
 		TreeModel::Flags flags;

@@ -10,9 +10,11 @@ class TreeModel : public QObject
 	public:
 		enum Flag
 		{
-			NoItemFlags = 0,
-			ItemIsSelected,
-			ItemIsSelectable
+			NoItemFlags      = 0x0000,
+			ItemIsSelected   = 0x0001,
+			ItemIsSelectable = 0x0002,
+			ItemIsEdited     = 0x0004,
+			ItemIsEditable   = 0x0008
 		};
 		Q_DECLARE_FLAGS(Flags, Flag)
 

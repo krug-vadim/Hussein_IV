@@ -43,48 +43,50 @@ void TreeView::setModel(TreeModel *model)
 	verticalScrollBar()->setMaximum( _totalHeight );
 }
 
-QSize TreeView::cellSizeHint(int row, int col, const QObject *obj) const
+QSize TreeView::cellSizeHint(int row, int col, QObject *obj) const
 {
 	return QSize(128, 64);
 }
 
-void TreeView::drawCell(int row, int col, const QObject *obj, const QRect &cell, QStyleOptionViewItem &opt, QPainter &painter)
+void TreeView::drawCell(int row, int col, QObject *obj, const QRect &cell, QStyleOptionViewItem &opt, QPainter &painter)
 {
-	//do it
-	//painter.drawRect( cell );
-	painter.drawText(cell,
-	                 QString("(%1,%2)").arg(row).arg(col));
+	QStyleOptionViewItem o;
+	o.QStyleOption::operator=(opt);
+
+	o.rect = cell;
+	o.displayAlignment = Qt::AlignCenter;
+
+	o.features |= QStyleOptionViewItem::HasDisplay;
+
+	if ( model()->flags(obj) & TreeModel::ItemIsEdited )
+		o.text = QString("edited");
+	else
+		o.text = QString("(%1,%2)").arg(row).arg(col);
+
+	style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &o, &painter, this);
+	style()->drawControl(QStyle::CE_ItemViewItem, &o, &painter, this);
 }
 
-void TreeView::drawRow(int row, const QObject *obj, const QRect &rect, QStyleOptionViewItem &opt, QPainter &painter)
+void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionViewItem &opt, QPainter &painter)
 {
 	QRect cell(rect);
 
 	//drawGap();
-
-	if ( obj == _highlightedItem )
+	if ( _highlightedItem == obj )
 		opt.state |= QStyle::State_MouseOver;
-	else
-		opt.state &= ~QStyle::State_MouseOver;
-	opt.state |= QStyle::State_HasFocus;
+
 	if ( row % 2 )
-	{
 		opt.features |= QStyleOptionViewItem::Alternate;
-		style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, &painter, this);
-	}
 	else
-	{
 		opt.features &= ~QStyleOptionViewItem::Alternate;
-		style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, &painter, this);
-	}
+
+	style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, &painter, this);
 
 	for(uint i = 0; i < model()->columnCount(obj); i++)
 	{
 		drawCell(row, i, obj, cell, opt, painter);
 		cell.moveLeft( cell.x() + cell.width() );
 	}
-
-	style()->drawPrimitive(QStyle::PE_IndicatorBranch, &opt, &painter, this);
 
 	if ( _selectedItems.contains(obj)  )
 	{
@@ -103,6 +105,10 @@ void TreeView::drawTree(QPainter &painter)
 	QRect rect;
 	QStyleOptionViewItem opt;
 
+	opt.init(this);
+	opt.state &= ~QStyle::State_Selected;
+	opt.state &= ~QStyle::State_HasFocus;
+
 	rect.setY(_offsetY);
 
 	foreach(const NodeInfo &node, _paintList)
@@ -120,58 +126,98 @@ void TreeView::drawTree(QPainter &painter)
 
 void TreeView::keyPressEvent(QKeyEvent *event)
 {
+	QObject *t;
+	int l;
+	TreeModel::Flags flags;
+
 	switch ( event->key() )
 	{
-//		case Qt::Key_Return:
-//		case Qt::Key_Enter:
-//			if ( state() == QAbstractItemView::EditingState )
-//				break;
-//			if ( event->modifiers() & Qt::ShiftModifier )
-//				addSubtask();
-//			else if ( event->modifiers() & Qt::ControlModifier )
-//				toggleTaskDone();
-//			else
-//				addTask();
-//			break;
+		case Qt::Key_Up:
+			if ( event->modifiers() != Qt::NoModifier )
+				break;
 
-//		case Qt::Key_Up:
-//			if ( event->modifiers() & Qt::ControlModifier )
-//				taskMoveUp();
-//			else
-//			{
-//				QTreeView::keyPressEvent(event);
-//				return;
-//			}
-//			break;
+			if ( _selectedItems.empty() )
+				break;
 
-//		case Qt::Key_Down:
-//			if ( event->modifiers() & Qt::ControlModifier )
-//				taskMoveDown();
-//			else
-//			{
-//				QTreeView::keyPressEvent(event);
-//				return;
-//			}
-//			break;
+			t = _selectedItems.last();
+			t = previousNode(t, l);
+			if ( !t )
+				break;
+			_selectedItems.clear();
+			_selectedItems.append(t);
+			event->accept();
+			viewport()->update();
+			return;
 
-//		case Qt::Key_Tab:
-//			changeCurrentToSubtask();
-//			break;
+		case Qt::Key_Down:
+			if ( event->modifiers() != Qt::NoModifier )
+				break;
 
-//		case Qt::Key_Backtab:
-//			changeCurrentToTask();
-//			break;
+			if ( _selectedItems.empty() )
+				break;
 
-//		case Qt::Key_Delete:
-//			deleteTask();
-//			break;
+			t = _selectedItems.last();
+			t = nextNode(t, l);
+			if ( !t )
+				break;
+			_selectedItems.clear();
+			_selectedItems.append(t);
+			event->accept();
+			viewport()->update();
+			return;
 
-		default:
-			QAbstractScrollArea::keyPressEvent(event);
+		case Qt::Key_F2:
+			if ( event->modifiers() != Qt::NoModifier )
+				break;
+
+			if ( _selectedItems.empty() )
+				break;
+
+			t = _selectedItems.last();
+
+			if ( !t )
+				break;
+
+			flags = model()->flags(t);
+
+			if ( !(flags & TreeModel::ItemIsEditable) )
+				break;
+
+			model()->setFlags( flags | TreeModel::ItemIsEdited, t);
+
+			event->accept();
+			viewport()->update();
+			return;
+
+		case Qt::Key_Escape:
+			if ( event->modifiers() != Qt::NoModifier )
+				break;
+
+			if ( _selectedItems.empty() )
+				break;
+
+			t = _selectedItems.last();
+
+			if ( !t )
+				break;
+
+			flags = model()->flags(t);
+
+			if ( flags & TreeModel::ItemIsEdited )
+				flags &= ~TreeModel::ItemIsEdited;
+			else if ( flags & TreeModel::ItemIsSelected )
+				flags &= ~TreeModel::ItemIsSelected;
+
+			model()->setFlags( flags, t);
+
+			//_selectedItems.clear();
+
+			event->accept();
+			viewport()->update();
 			return;
 	}
 
-	event->accept();
+	QAbstractScrollArea::keyPressEvent(event);
 }
 
 void TreeView::mouseMoveEvent(QMouseEvent *event)
@@ -239,7 +285,7 @@ int TreeView::findTopNode(int offset)
 				return 0;
 
 			_topNode.obj = t;
-			_topNode.row--;
+			--_topNode.row;
 			_topNode.level = level;
 			_topNode.size = cellSizeHint(_topNode.row, -1, t);
 
@@ -259,7 +305,7 @@ int TreeView::findTopNode(int offset)
 				return 0;//offset;
 
 			_topNode.obj = t;
-			_topNode.row++;
+			++_topNode.row;
 			_topNode.level = level;
 			_topNode.size = cellSizeHint(_topNode.row, -1, t);
 		}
@@ -311,7 +357,7 @@ void TreeView::calculateTotalHeight()
 
 void TreeView::selectRow(const QPoint &pos, const bool append)
 {
-	const QObject *obj = objAtPos(pos);
+	QObject *obj = objAtPos(pos);
 
 	if ( !obj )
 		return;
@@ -328,7 +374,7 @@ void TreeView::selectRow(const QPoint &pos, const bool append)
 	}
 }
 
-const QObject *TreeView::objAtPos(const QPoint &pos) const
+QObject *TreeView::objAtPos(const QPoint &pos) const
 {
 	int height = pos.y() - _offsetY;
 

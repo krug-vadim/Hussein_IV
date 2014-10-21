@@ -28,12 +28,12 @@ class TreeView : public QAbstractScrollArea
 		void setModel(TreeModel *model);
 
 	protected:
-		QSize cellSizeHint(int row, int col, const QObject *obj) const;
+		QSize cellSizeHint(int row, int col, QObject *obj) const;
 
-		void drawCell(int row, int col, const QObject *obj, const QRect &cell, QStyleOptionViewItem &opt, QPainter &painter);
-		void drawRow(int row, const QObject *obj,  const QRect &rect, QStyleOptionViewItem &opt, QPainter &painter);
+		void drawCell(int row, int col, QObject *obj, const QRect &cell, QStyleOptionViewItem &opt, QPainter &painter);
+		void drawRow(int row, QObject *obj,  const QRect &rect, QStyleOptionViewItem &opt, QPainter &painter);
 
-		int drawNode(int row, const QObject *obj);
+		int drawNode(int row, QObject *obj);
 
 		void drawTree(QPainter &painter);
 
@@ -52,7 +52,7 @@ class TreeView : public QAbstractScrollArea
 		void calculateTotalHeight(void);
 		void selectRow(const QPoint &pos, const bool append);
 
-		const QObject *objAtPos(const QPoint &pos) const;
+		QObject *objAtPos(const QPoint &pos) const;
 
 		QObject *previousNode(QObject *obj, int &level) const;
 		QObject *nextNode(QObject *obj, int &level) const;
@@ -63,8 +63,8 @@ class TreeView : public QAbstractScrollArea
 
 		int _totalHeight;
 
-		const QObject *_highlightedItem;
-		QList<const QObject *> _selectedItems;
+		QObject *_highlightedItem;
+		QList<QObject *> _selectedItems;
 		TreeModel *_model;
 };
 

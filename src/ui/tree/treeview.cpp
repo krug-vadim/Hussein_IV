@@ -50,21 +50,15 @@ QSize TreeView::cellSizeHint(int row, int col, QObject *obj) const
 
 void TreeView::drawCell(int row, int col, QObject *obj, const QRect &cell, QStyleOptionViewItem &opt, QPainter &painter)
 {
-	QStyleOptionViewItem o;
-	o.QStyleOption::operator=(opt);
+	QStyleOptionViewItem o(opt);
 
 	o.rect = cell;
-	o.displayAlignment = Qt::AlignCenter;
-
-	o.state |= QStyle::State_Active;
-	o.features |= QStyleOptionViewItem::HasDisplay;
 
 	if ( model()->flags(obj) & TreeModel::ItemIsEdited )
 		o.text = QString("edited");
 	else
 		o.text = QString("(%1,%2)").arg(row).arg(col);
 
-	//style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &o, &painter, this);
 	style()->drawControl(QStyle::CE_ItemViewItem, &o, &painter, this);
 }
 
@@ -102,10 +96,10 @@ void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionVie
 		o.state |= QStyle::State_HasFocus;
 		o.state |= QStyle::State_Selected;
 		o.state |= QStyle::State_Active;
+		o.state |= QStyle::State_Item;
 		QPalette::ColorGroup cg = QPalette::Normal;
 		o.backgroundColor = opt.palette.color(cg, QPalette::Highlight);
 		o.rect = opt.rect;
-		style()->drawPrimitive(QStyle::PE_IndicatorBranch, &o, &painter, this);
 		style()->drawPrimitive(QStyle::PE_FrameFocusRect, &o, &painter, this);
 	}
 }
@@ -119,6 +113,16 @@ void TreeView::drawTree(QPainter &painter)
 	opt.state &= ~QStyle::State_Selected;
 	opt.state &= ~QStyle::State_HasFocus;
 
+	opt.features = QStyleOptionViewItem::HasDisplay
+	             ;//| QStyleOptionViewItem::HasDecoration;
+	opt.displayAlignment = Qt::AlignCenter;
+	opt.viewItemPosition = QStyleOptionViewItem::OnlyOne;
+	opt.state |= QStyle::State_Active;
+	opt.state |= QStyle::State_Enabled;
+	opt.state |= QStyle::State_Item;
+
+	opt.showDecorationSelected = true;
+
 	opt.palette.setCurrentColorGroup(QPalette::Active);
 
 	rect.setY(_offsetY);
@@ -128,7 +132,10 @@ void TreeView::drawTree(QPainter &painter)
 		rect.setX( node.level * 32 );
 		rect.setSize(node.size);
 
-		opt.rect.setRect(0, rect.y(), viewport()->width(), rect.height());
+		opt.rect.setRect(0, rect.y(), node.level * 32, rect.height() );
+		style()->drawPrimitive(QStyle::PE_IndicatorBranch, &opt, &painter, this);
+
+		opt.rect.setRect(rect.x(), rect.y(), viewport()->width(), rect.height());
 
 		drawRow(node.row, node.obj, rect, opt, painter);
 

@@ -56,6 +56,7 @@ void TreeView::drawCell(int row, int col, QObject *obj, const QRect &cell, QStyl
 	o.rect = cell;
 	o.displayAlignment = Qt::AlignCenter;
 
+	o.state |= QStyle::State_Active;
 	o.features |= QStyleOptionViewItem::HasDisplay;
 
 	if ( model()->flags(obj) & TreeModel::ItemIsEdited )
@@ -63,7 +64,7 @@ void TreeView::drawCell(int row, int col, QObject *obj, const QRect &cell, QStyl
 	else
 		o.text = QString("(%1,%2)").arg(row).arg(col);
 
-	style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &o, &painter, this);
+	//style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &o, &painter, this);
 	style()->drawControl(QStyle::CE_ItemViewItem, &o, &painter, this);
 }
 
@@ -93,6 +94,7 @@ void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionVie
 		QStyleOptionFocusRect o;
 		o.QStyleOption::operator=(opt);
 		o.state |= QStyle::State_KeyboardFocusChange;
+		o.state |= QStyle::State_Selected;
 		QPalette::ColorGroup cg = QPalette::Normal;
 		o.backgroundColor = QGuiApplication::palette().color(cg, QPalette::Highlight);
 		o.rect = opt.rect;

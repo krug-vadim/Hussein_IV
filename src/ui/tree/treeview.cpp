@@ -55,11 +55,16 @@ void TreeView::drawCell(int row, int col, QObject *obj, const QRect &cell, QStyl
 	o.rect = cell;
 
 	if ( model()->flags(obj) & TreeModel::ItemIsEdited )
+	{
 		o.text = QString("edited");
+		o.state |= QStyle::State_Editing;
+	}
 	else
+	{
 		o.text = QString("(%1,%2)").arg(row).arg(col);
+		style()->drawControl(QStyle::CE_ItemViewItem, &o, &painter, this);
+	}
 
-	style()->drawControl(QStyle::CE_ItemViewItem, &o, &painter, this);
 }
 
 void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionViewItem &opt, QPainter &painter)
@@ -76,9 +81,9 @@ void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionVie
 		opt.features &= ~QStyleOptionViewItem::Alternate;
 
 	if ( _selectedItems.contains(obj)  )
-		opt.state |= QStyle::State_Selected;
+		opt.state |= QStyle::State_Selected | QStyle::State_KeyboardFocusChange;
 	else
-		opt.state &= ~QStyle::State_Selected;
+		opt.state &= ~(QStyle::State_Selected | QStyle::State_KeyboardFocusChange);
 
 	style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, &painter, this);
 
@@ -93,10 +98,6 @@ void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionVie
 		QStyleOptionFocusRect o;
 		o.QStyleOption::operator=(opt);
 		o.state |= QStyle::State_KeyboardFocusChange;
-		o.state |= QStyle::State_HasFocus;
-		o.state |= QStyle::State_Selected;
-		o.state |= QStyle::State_Active;
-		o.state |= QStyle::State_Item;
 		QPalette::ColorGroup cg = QPalette::Normal;
 		o.backgroundColor = opt.palette.color(cg, QPalette::Highlight);
 		o.rect = opt.rect;
@@ -112,14 +113,13 @@ void TreeView::drawTree(QPainter &painter)
 	opt.init(this);
 	opt.state &= ~QStyle::State_Selected;
 	opt.state &= ~QStyle::State_HasFocus;
-
-	opt.features = QStyleOptionViewItem::HasDisplay
-	             ;//| QStyleOptionViewItem::HasDecoration;
-	opt.displayAlignment = Qt::AlignCenter;
-	opt.viewItemPosition = QStyleOptionViewItem::OnlyOne;
 	opt.state |= QStyle::State_Active;
 	opt.state |= QStyle::State_Enabled;
 	opt.state |= QStyle::State_Item;
+	opt.features = QStyleOptionViewItem::HasDisplay
+	             | QStyleOptionViewItem::HasDecoration;
+	opt.displayAlignment = Qt::AlignCenter;
+	opt.viewItemPosition = QStyleOptionViewItem::OnlyOne;
 
 	opt.showDecorationSelected = true;
 
@@ -132,8 +132,8 @@ void TreeView::drawTree(QPainter &painter)
 		rect.setX( node.level * 32 );
 		rect.setSize(node.size);
 
-		opt.rect.setRect(0, rect.y(), node.level * 32, rect.height() );
-		style()->drawPrimitive(QStyle::PE_IndicatorBranch, &opt, &painter, this);
+		/*opt.rect.setRect(0, rect.y(), node.level * 32, rect.height() );
+		style()->drawPrimitive(QStyle::PE_IndicatorBranch, &opt, &painter, this);*/
 
 		opt.rect.setRect(rect.x(), rect.y(), viewport()->width(), rect.height());
 
@@ -164,6 +164,10 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 				break;
 			_selectedItems.clear();
 			_selectedItems.append(t);
+
+			if ( !isObjectVisible(t) )
+				scrollUpToObject(t);
+
 			event->accept();
 			viewport()->update();
 			return;
@@ -172,15 +176,44 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 			if ( event->modifiers() != Qt::NoModifier )
 				break;
 
-			if ( _selectedItems.empty() )
-				break;
+			t = ( _selectedItems.empty() ) ? model()->root() : nextNode(_selectedItems.last(), l);
 
-			t = _selectedItems.last();
-			t = nextNode(t, l);
 			if ( !t )
 				break;
+
 			_selectedItems.clear();
 			_selectedItems.append(t);
+
+			if ( !isObjectVisible(t) )
+				scrollDownToObject(t);
+
+			event->accept();
+			viewport()->update();
+			return;
+
+		case Qt::Key_Home:
+			if ( event->modifiers() != Qt::NoModifier )
+				break;
+
+			scrollUpToObject(0);
+
+			_selectedItems.clear();
+			if ( !_paintList.empty() && _paintList.front().obj )
+				_selectedItems.append(_paintList.front().obj);
+
+			event->accept();
+			viewport()->update();
+			return;
+
+		case Qt::Key_End:
+			if ( event->modifiers() != Qt::NoModifier )
+				break;
+
+			scrollDownToObject(0);
+			_selectedItems.clear();
+			if ( !_paintList.empty() && _paintList.last().obj )
+				_selectedItems.append(_paintList.last().obj);
+
 			event->accept();
 			viewport()->update();
 			return;
@@ -391,6 +424,83 @@ void TreeView::selectRow(const QPoint &pos, const bool append)
 		_selectedItems.append(obj);
 		viewport()->update();
 	}
+}
+
+bool TreeView::isObjectVisible(QObject *obj)
+{
+	foreach(const NodeInfo &node, _paintList)
+	{
+		if ( node.obj == obj )
+			return true;
+	}
+
+	return false;
+}
+
+void TreeView::scrollUpToObject(QObject *obj)
+{
+	int row;
+	int level;
+	QObject *t;
+
+	int v = verticalScrollBar()->value();
+
+	while ( _paintList.front().obj != obj )
+	{
+		row   = _paintList.front().row - 1;
+		level = _paintList.front().level;
+
+		t = previousNode(_paintList.front().obj, level);
+
+		if ( !t )
+			break;
+
+		_paintList.push_front(NodeInfo());
+		_paintList.front().obj = t;
+		_paintList.front().row = row;
+		_paintList.front().level = level;
+		_paintList.front().size = cellSizeHint(row, -1, t);
+
+		v -= _paintList.front().size.height();
+
+		_paintList.pop_back();
+	}
+
+	_offsetY = 0;
+	verticalScrollBar()->setValue(v);
+}
+
+void TreeView::scrollDownToObject(QObject *obj)
+{
+	int row;
+	int level;
+	QObject *t;
+
+	int v = verticalScrollBar()->value();
+
+	while ( _paintList.last().obj != obj )
+	{
+		row   = _paintList.last().row + 1;
+		level = _paintList.last().level;
+
+		t = nextNode(_paintList.last().obj, level);
+
+		if ( !t )
+			break;
+
+		_paintList.append(NodeInfo());
+		_paintList.last().obj = t;
+		_paintList.last().row = row;
+		_paintList.last().level = level;
+		_paintList.last().size = cellSizeHint(row, -1, t);
+
+		v += _paintList.last().size.height();
+
+		_paintList.pop_front();
+	}
+
+	_offsetY = 0;
+	verticalScrollBar()->setValue(v);
 }
 
 QObject *TreeView::objAtPos(const QPoint &pos) const

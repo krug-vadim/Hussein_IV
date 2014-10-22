@@ -52,6 +52,11 @@ class TreeView : public QAbstractScrollArea
 		void calculateTotalHeight(void);
 		void selectRow(const QPoint &pos, const bool append);
 
+		bool isObjectVisible(QObject *obj);
+
+		void scrollUpToObject(QObject *obj);
+		void scrollDownToObject(QObject *obj);
+
 		QObject *objAtPos(const QPoint &pos) const;
 
 		QObject *previousNode(QObject *obj, int &level) const;

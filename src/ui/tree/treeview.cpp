@@ -81,6 +81,11 @@ void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionVie
 	else
 		opt.features &= ~QStyleOptionViewItem::Alternate;
 
+	if ( _selectedItems.contains(obj)  )
+		opt.state |= QStyle::State_Selected;
+	else
+		opt.state &= ~QStyle::State_Selected;
+
 	style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, &painter, this);
 
 	for(uint i = 0; i < model()->columnCount(obj); i++)
@@ -94,10 +99,13 @@ void TreeView::drawRow(int row, QObject *obj, const QRect &rect, QStyleOptionVie
 		QStyleOptionFocusRect o;
 		o.QStyleOption::operator=(opt);
 		o.state |= QStyle::State_KeyboardFocusChange;
+		o.state |= QStyle::State_HasFocus;
 		o.state |= QStyle::State_Selected;
+		o.state |= QStyle::State_Active;
 		QPalette::ColorGroup cg = QPalette::Normal;
-		o.backgroundColor = QGuiApplication::palette().color(cg, QPalette::Highlight);
+		o.backgroundColor = opt.palette.color(cg, QPalette::Highlight);
 		o.rect = opt.rect;
+		style()->drawPrimitive(QStyle::PE_IndicatorBranch, &o, &painter, this);
 		style()->drawPrimitive(QStyle::PE_FrameFocusRect, &o, &painter, this);
 	}
 }
@@ -110,6 +118,8 @@ void TreeView::drawTree(QPainter &painter)
 	opt.init(this);
 	opt.state &= ~QStyle::State_Selected;
 	opt.state &= ~QStyle::State_HasFocus;
+
+	opt.palette.setCurrentColorGroup(QPalette::Active);
 
 	rect.setY(_offsetY);
 

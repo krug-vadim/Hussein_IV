@@ -24,4 +24,26 @@ HEADERS = \
 FORMS   = \
     src/ui/mainwindow.ui
 
-OTHER_FILES +=
+
+#OTHER_FILES += \
+#    Hussein.rc \
+#    Hussein.ico
+
+#RESOURCES += \
+#    Hussein.qrc
+
+#win32 {
+#    RC_FILE += Hussein.rc
+#    INCLUDEPATH += "lib/yaml-cpp/include"
+#    INCLUDEPATH += "lib/boost/"
+#}
+
+CONFIG(debug, debug|release) {
+    win32:LIBS += "-L$$PWD/lib/yaml-cpp/build/debug/"
+    win32:LIBS += "-lyamld"
+    unix:LIBS += -lyaml-cpp
+} else {
+    win32:LIBS += "-L$$PWD/lib/yaml-cpp/build/release/"
+    win32:LIBS += "-lyaml"
+    unix:LIBS += -lyaml-cpp
+}

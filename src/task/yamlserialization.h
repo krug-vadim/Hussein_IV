@@ -5,7 +5,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QVariant>
 
-#include "../limbs/task.h"
+#include "task.h"
 
 namespace YAML
 {

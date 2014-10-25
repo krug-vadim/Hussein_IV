@@ -11,7 +11,9 @@ SOURCES = \
     src/ui/mainwindow.cpp \
     src/ui/tree/treeview.cpp \
     src/ui/tree/treemodel.cpp \
-    src/ui/testtreemodel.cpp
+    src/ui/testtreemodel.cpp \
+    src/task/yamlserialization.cpp \
+    src/task/task.cpp
 
 HEADERS = \
     src/ui/mainwindow.h \
@@ -19,11 +21,12 @@ HEADERS = \
     src/ui/tree/treemodel.h \
     src/core/tree.h \
     src/ui/testtreemodel.h \
-    src/interface/treeinterface.h
+    src/interface/treeinterface.h \
+    src/task/yamlserialization.h \
+    src/task/task.h
 
 FORMS   = \
     src/ui/mainwindow.ui
-
 
 #OTHER_FILES += \
 #    Hussein.rc \

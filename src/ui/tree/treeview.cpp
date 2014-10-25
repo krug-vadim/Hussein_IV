@@ -185,7 +185,10 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 			_selectedItems.append(t);
 
 			if ( !isObjectVisible(t) )
+			{
+				qDebug() << "not visible";
 				scrollDownToObject(t);
+			}
 
 			event->accept();
 			viewport()->update();
@@ -428,11 +431,19 @@ void TreeView::selectRow(const QPoint &pos, const bool append)
 
 bool TreeView::isObjectVisible(QObject *obj)
 {
+	int height = viewport()->height() - _offsetY;
+
 	foreach(const NodeInfo &node, _paintList)
 	{
+		qDebug() << "height" << height << node.size.height();
+
 		if ( node.obj == obj )
-			return true;
+			return (height > node.size.height());
+
+		height -= node.size.height();
 	}
+
+	qDebug() << "height" << height;
 
 	return false;
 }
@@ -499,7 +510,7 @@ void TreeView::scrollDownToObject(QObject *obj)
 		_paintList.pop_front();
 	}
 
-	_offsetY = 0;
+	//_offsetY = 0;
 	verticalScrollBar()->setValue(v);
 }
 

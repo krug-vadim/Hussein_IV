@@ -9,7 +9,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 
-#include "../limbs/task.h"
+#include "task.h"
 
 YamlSerialization::YamlSerialization()
 {

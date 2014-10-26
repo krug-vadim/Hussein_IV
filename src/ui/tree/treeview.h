@@ -63,7 +63,6 @@ class TreeView : public QAbstractScrollArea
 		QObject *nextNode(QObject *obj, int &level) const;
 
 		QList<NodeInfo> _paintList;
-		NodeInfo _topNode;
 		int _offsetY;
 
 		int _totalHeight;

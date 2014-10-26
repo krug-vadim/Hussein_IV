@@ -33,10 +33,11 @@ void TreeView::setModel(TreeModel *model)
 	_selectedItems.clear();
 
 	_offsetY = 0;
-	_topNode.obj = model->root();
-	_topNode.row = 0;
-	_topNode.level = 0;
-	_topNode.rect.setSize(cellSizeHint(0,-1,_topNode.obj));
+	_paintList.clear();
+	_paintList.append(NodeInfo());
+	_paintList.last().obj = model->root();
+	_paintList.last().row = 0;
+	_paintList.last().level = 0;
 
 	calculateTotalHeight();
 
@@ -129,17 +130,18 @@ void TreeView::drawTree(QPainter &painter)
 
 	foreach(const NodeInfo &node, _paintList)
 	{
-		rect.setX( node.level * 32 );
-		rect.setSize(node.rect.size());
+		//rect.setX( node.level * 32 );
+		//rect.setSize(node.rect.size());
 
 		/*opt.rect.setRect(0, rect.y(), node.level * 32, rect.height() );
 		style()->drawPrimitive(QStyle::PE_IndicatorBranch, &opt, &painter, this);*/
 
-		opt.rect.setRect(rect.x(), rect.y(), viewport()->width(), rect.height());
+		//opt.rect.setRect(rect.x(), rect.y(), viewport()->width(), rect.height());
+		opt.rect = node.rect;
 
-		drawRow(node.row, node.obj, rect, opt, painter);
+		drawRow(node.row, node.obj, node.rect, opt, painter);
 
-		rect.moveTop( rect.y() + rect.height() );
+		//rect.moveTop( rect.y() + rect.height() );
 	}
 }
 
@@ -187,6 +189,7 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 			if ( !isObjectVisible(t) )
 			{
 				qDebug() << "not visible";
+				t = nextNode(t, l);
 				scrollDownToObject(t);
 			}
 
@@ -327,42 +330,42 @@ int TreeView::findTopNode(int offset)
 	QObject *t;
 	int level;
 
-	level = _topNode.level;
+	level = _paintList.first().level;
 
 	if ( offset > 0 )
 	{
 		// scrolling up
 		while ( offset > 0 )
 		{
-			t = previousNode(_topNode.obj, level);
+			t = previousNode(_paintList.first().obj, level);
 
 			if ( !t )
 				return 0;
 
-			_topNode.obj = t;
-			--_topNode.row;
-			_topNode.level = level;
-			_topNode.rect.setSize(cellSizeHint(_topNode.row, -1, t));
+			_paintList.first().obj = t;
+			--_paintList.first().row;
+			_paintList.first().level = level;
+			_paintList.first().rect.setSize(cellSizeHint(_paintList.first().row, -1, t));
 
-			offset -= _topNode.rect.size().height();
+			offset -= _paintList.first().rect.size().height();
 		}
 	}
 	else
 	{
 		// scrolling down
-		while ( abs(offset) > _topNode.rect.size().height() )
+		while ( abs(offset) > _paintList.first().rect.size().height() )
 		{
-			offset += _topNode.rect.size().height();
+			offset += _paintList.first().rect.size().height();
 
-			t = nextNode(_topNode.obj, level);
+			t = nextNode(_paintList.first().obj, level);
 
 			if ( !t )
 				return 0;//offset;
 
-			_topNode.obj = t;
-			++_topNode.row;
-			_topNode.level = level;
-			_topNode.rect.setSize(cellSizeHint(_topNode.row, -1, t));
+			_paintList.first().obj = t;
+			++_paintList.first().row;
+			_paintList.first().level = level;
+			_paintList.first().rect.setSize(cellSizeHint(_paintList.first().row, -1, t));
 		}
 	}
 
@@ -372,27 +375,31 @@ int TreeView::findTopNode(int offset)
 void TreeView::makePaintList(const QSize &viewport)
 {
 	QObject *obj;
-	int remainHeight;
+	NodeInfo node;
+	int y;
 	int row;
 	int level;
 
-	remainHeight = viewport.height() - _offsetY;
+	int viewportWidth = viewport.width();
+	int maxHeight = viewport.height();
+	y = _offsetY;
 
-	row = _topNode.row;
-	level = _topNode.level;
-	obj = _topNode.obj;
+	obj = _paintList.first().obj;
+	row = _paintList.first().row;
+	level = _paintList.first().level;
+
 	_paintList.clear();
 
-	while ( obj && remainHeight > 0 )
+	while ( obj && y < maxHeight )
 	{
 		_paintList.append(NodeInfo());
 		_paintList.last().obj = obj;
 		_paintList.last().row = row;
 		_paintList.last().level = level;
-		_paintList.last().rect.setSize(cellSizeHint(row, -1, obj));
+		_paintList.last().rect.setRect(0, y, viewportWidth, cellSizeHint(row, -1, obj).height());
 
 		row++;
-		remainHeight -= _paintList.last().rect.size().height();
+		y += _paintList.last().rect.size().height();
 
 		obj = nextNode(obj, level);
 	}

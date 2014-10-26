@@ -16,7 +16,7 @@ class TreeView : public QAbstractScrollArea
 	struct NodeInfo
 	{
 		QObject *obj;
-		QSize   size;
+		QRect rect;
 		int    row;
 		int    level;
 	};

@@ -17,7 +17,8 @@
 TreeView::TreeView(QWidget *parent) :
     QAbstractScrollArea (parent)
 {
-	setMouseTracking(true);
+	le = 0;
+	setMouseTracking(false);
 }
 
 TreeModel *TreeView::model() const
@@ -59,6 +60,12 @@ void TreeView::drawCell(int row, int col, QObject *obj, const QRect &cell, QStyl
 	{
 		o.text = QString("edited");
 		o.state |= QStyle::State_Editing;
+
+		if ( le )
+		{
+			le->resize(cell.size());
+			le->render(&painter, QPoint(20, cell.bottom()));
+		}
 	}
 	else
 	{
@@ -243,6 +250,13 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 
 			model()->setFlags( flags | TreeModel::ItemIsEdited, t);
 
+			le = new QLineEdit(this);
+			le->setFocus();
+
+			//le->setFocusPolicy(Qt::WheelFocus);
+
+			this->installEventFilter(le);
+
 			event->accept();
 			viewport()->update();
 			return;
@@ -259,6 +273,12 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 			if ( !t )
 				break;
 
+			if ( le )
+			{
+				delete le;
+				le = 0;
+			}
+
 			flags = model()->flags(t);
 
 			if ( flags & TreeModel::ItemIsEdited )
@@ -274,6 +294,9 @@ void TreeView::keyPressEvent(QKeyEvent *event)
 			viewport()->update();
 			return;
 	}
+
+	if ( le )
+		le->event(event);
 
 	QAbstractScrollArea::keyPressEvent(event);
 }
@@ -293,6 +316,9 @@ void TreeView::mouseMoveEvent(QMouseEvent *event)
 void TreeView::mousePressEvent(QMouseEvent *event)
 {
 	QAbstractScrollArea::mousePressEvent(event);
+
+	if ( le )
+		le->event(event);
 
 	if ( event->button() != Qt::LeftButton )
 		return;
@@ -324,6 +350,7 @@ void TreeView::scrollContentsBy(int dx, int dy)
 	makePaintList(viewport()->size());
 	viewport()->update();
 }
+
 
 int TreeView::findTopNode(int offset)
 {

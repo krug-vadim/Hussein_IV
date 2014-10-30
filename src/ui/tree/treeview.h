@@ -7,6 +7,10 @@
 
 #include "../../core/tree.h"
 
+
+#include <QLineEdit>
+
+
 class TreeModel;
 
 class TreeView : public QAbstractScrollArea
@@ -61,6 +65,8 @@ class TreeView : public QAbstractScrollArea
 
 		QObject *previousNode(QObject *obj, int &level) const;
 		QObject *nextNode(QObject *obj, int &level) const;
+
+		QLineEdit *le;
 
 		QList<NodeInfo> _paintList;
 		int _offsetY;
